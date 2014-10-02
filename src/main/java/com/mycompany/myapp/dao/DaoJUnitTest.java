@@ -81,7 +81,7 @@ public class DaoJUnitTest {
 	
 	@Test
 	public void getOneUserByEmail() {
-		// 6. email이 'user1@example.com'인 CalendarUser가 1명뿐임을 확인하는 테스크 코드 작성
+		// 6. email이 'user1@example.com'인 CalendarUser가 존재함을 확인하는 테스트 코드 작성 (null인지 아닌지)
 		// [주의] public CalendarUser findUserByEmail(String email)를 테스트 하는 코드
 	}
 	
