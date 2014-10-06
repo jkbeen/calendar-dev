@@ -12,6 +12,7 @@ import com.mycompany.myapp.domain.Event;
 
 public class DaoTest { 
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
+		
 		ApplicationContext context = new GenericXmlApplicationContext("com/mycompany/myapp/applicationContext.xml");;
 		
 		CalendarUserDao calendarUserDao = context.getBean("calendarUserDao", JdbcCalendarUserDao.class);
