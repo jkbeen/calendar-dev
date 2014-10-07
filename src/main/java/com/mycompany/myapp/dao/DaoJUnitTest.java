@@ -1,11 +1,9 @@
 package com.mycompany.myapp.dao;
 
 import java.util.Calendar;
-import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.junit.Before;
@@ -185,7 +183,7 @@ public class DaoJUnitTest {
 	
 	@Test
 	public void getOneUserByEmail() {
-		// 6. email이 'user1@example.com'인 CalendarUser가 존재함을 확인하는 테스트 코드 작성 (null인지 아닌지)
+		// 6. email이 'user1@example.com'인 CalendarUser가 1명뿐임을 확인하는 테스크 코드 작성
 		// [주의] public CalendarUser findUserByEmail(String email)를 테스트 하는 코드
 		assertTrue(calendarUserDao.findUserByEmail("user1@example.com") != null);
 	}

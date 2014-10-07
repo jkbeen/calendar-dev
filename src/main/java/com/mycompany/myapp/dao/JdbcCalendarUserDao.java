@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
@@ -23,6 +24,7 @@ public class JdbcCalendarUserDao implements CalendarUserDao {
 	private JdbcTemplate jdbcTemplate;
 
 	private RowMapper<CalendarUser> rowMapper;
+	
 	// --- constructors ---
 	public JdbcCalendarUserDao() {
 		rowMapper = new RowMapper<CalendarUser>() {
@@ -38,6 +40,7 @@ public class JdbcCalendarUserDao implements CalendarUserDao {
 		};
 	}
 
+	@Autowired
 	public void setDataSource(DataSource dataSource){
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
