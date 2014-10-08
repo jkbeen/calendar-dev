@@ -36,8 +36,8 @@ public class DaoJUnitTest {
 	
 	private Random random = new Random(System.currentTimeMillis());
 
-	private static final int numInitialNumUsers = 9;
-	private static final int numInitialNumEvents = 3;
+	private static final int numInitialNumUsers = 12;
+	private static final int numInitialNumEvents = 4;
 	
 	@Before
 	public void setUp() {
@@ -70,6 +70,9 @@ public class DaoJUnitTest {
 					events[i].setNumLikes(9);
 					break;
 				case 2:
+					events[i].setNumLikes(10);
+					break;
+				case 3:
 					events[i].setNumLikes(10);
 					break;
 			}

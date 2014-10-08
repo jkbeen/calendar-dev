@@ -137,7 +137,7 @@ public class CalendarServiceTest {
 		}
 		
 		public void upgradeEventLevel(Event event) {
-			if (event.getId().equals(this.faultId) ) throw new TestCalenadarServiceException();
+			if ( event.getId().equals(this.faultId) ) throw new TestCalenadarServiceException();
 			super.upgradeEventLevel(event);
 		}
 	}

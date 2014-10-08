@@ -131,6 +131,7 @@ public class DefaultCalendarService implements CalendarService {
 	@Override
 	public void upgradeEventLevels() throws Exception{
 		// TODO Assignment 3
+		// 트랜잭션 관련 코딩 필요함
 	}
 
 	@Override
