@@ -20,7 +20,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import com.mycompany.myapp.domain.Event;
-
+import com.mycompany.myapp.domain.EventLevel;
 
 @Repository
 public class JdbcEventDao implements EventDao {
@@ -42,8 +42,9 @@ public class JdbcEventDao implements EventDao {
 				event.setWhen(when);
 				event.setSummary(rs.getString("summary"));
 				event.setDescription(rs.getString("description"));
-				event.setOwner(calendarUserDao.getUser(rs.getInt("owner")));
-				event.setAttendee(calendarUserDao.getUser(rs.getInt("attendee")));
+				event.setOwner(calendarUserDao.findUser(rs.getInt("owner")));
+				event.setNumLikes(rs.getInt("num_likes"));  						/* Updated by Assignment 3 */
+				event.setEventLevel(EventLevel.valueOf(rs.getInt("event_level")));	/* Updated by Assignment 3 */
 				return event;
 			}
 		};
@@ -56,7 +57,7 @@ public class JdbcEventDao implements EventDao {
 
 	// --- EventService ---
 	@Override
-	public Event getEvent(int eventId) {
+	public Event findEvent(int eventId) {
 		String sql_query = "select * from events where id = ?";
 		return this.jdbcTemplate.queryForObject(sql_query, new Object[] {eventId}, rowMapper);
 	}
@@ -68,15 +69,15 @@ public class JdbcEventDao implements EventDao {
 		jdbcTemplate.update(new PreparedStatementCreator() {
 			@Override
 			public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
-				PreparedStatement ps = connection.prepareStatement("insert into events(`when`, summary, description, owner, attendee) values(?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+				PreparedStatement ps = connection.prepareStatement("insert into events(`when`, summary, description, owner, num_likes, event_level) values(?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
 				
-				Timestamp timestamp = new Timestamp(event.getWhen().getTimeInMillis()); 
+				Timestamp timestamp = new Timestamp(Calendar.getInstance().getTimeInMillis()); /* Updated by Assignment 3 */ 
 				ps.setTimestamp(1, timestamp);
 				ps.setString(2, event.getSummary());
 				ps.setString(3, event.getDescription());
 				ps.setInt(4, event.getOwner().getId());
-				ps.setInt(5, event.getAttendee().getId());
-
+				ps.setInt(5, event.getNumLikes());      		/* Updated by Assignment 3 */
+				ps.setInt(6, event.getEventLevel().intValue());	/* Updated by Assignment 3 */
 				return ps;
 			}
 		}, keyHolder);
@@ -85,23 +86,32 @@ public class JdbcEventDao implements EventDao {
 
 	@Override
 	public List<Event> findForOwner(int ownerUserId) {
-		// Assignment 2
 		String sql_query = "select * from events where owner = ?";
 		return this.jdbcTemplate.query(sql_query, new Object[] {ownerUserId}, rowMapper);
 	}
 
 	@Override
-	public List<Event> getEvents(){
-		String sql_query;
-		sql_query = "select * from events";
-		
+	public List<Event> findAllEvents(){
+		String sql_query = "select * from events";
 		return this.jdbcTemplate.query(sql_query, rowMapper);
+	}
+
+	@Override
+	public void deleteAll() {
+		String sql = "delete from events";
+		this.jdbcTemplate.update(sql);
 	}
 	
 	@Override
-	public void deleteAll() {
-		// Assignment 2
-		String sql = "delete from events";
-		this.jdbcTemplate.update(sql);
+	public List<Event> findEventsByLevel(EventLevel eventLevel) {
+		// TODO Assignment 3
+		// 인자로 받은 이벤트 레벨에 대해 해당 레벨을 지니고 있는 이벤트들을 반환한다.
+		return null;
+	}
+
+	@Override
+    public void udpateEvent(Event event) {
+		// TODO Assignment 3
+		// 인자로 받은 이벤트가 지닌 각 필드 값으로 해당 이벤트 DB 테이블 내 칼럼을 업데이트 한다. 
 	}
 }

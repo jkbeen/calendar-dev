@@ -47,7 +47,7 @@ public class JdbcCalendarUserDao implements CalendarUserDao {
 
 	// --- CalendarUserDao methods ---
 	@Override
-	public CalendarUser getUser(int id){
+	public CalendarUser findUser(int id){
 		String sql_query = "select * from calendar_users where id = ?";
 		return this.jdbcTemplate.queryForObject(sql_query, new Object[] {id}, rowMapper);
 	}
@@ -86,6 +86,12 @@ public class JdbcCalendarUserDao implements CalendarUserDao {
 		}, keyHolder);
 		return keyHolder.getKey().intValue();
 	}
+	
+	@Override
+    public List<CalendarUser> findAllusers() {
+		String sql_query = "select * from calendar_users";
+		return this.jdbcTemplate.query(sql_query, rowMapper);
+    }
 
 	@Override
 	public void deleteAll() {
