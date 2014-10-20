@@ -32,18 +32,19 @@ public class DaoJUnitTest {
 	
 	private CalendarUser[] calendarUsers = null;
 	private Event[] events = null;
-	private EventAttendee[] eventAttentees = null;
+	private EventAttendee[] eventAttendees = null;
 	
 	private Random random = new Random(System.currentTimeMillis());
 
 	private static final int numInitialNumUsers = 12;
 	private static final int numInitialNumEvents = 4;
+	private static final int numInitialNumEventAttendees = 12;
 	
 	@Before
 	public void setUp() {
 		calendarUsers = new CalendarUser[numInitialNumUsers];
 		events = new Event[numInitialNumEvents];
-		eventAttentees = new EventAttendee[numInitialNumEvents];
+		eventAttendees = new EventAttendee[numInitialNumEvents];
 		
 		this.calendarUserDao.deleteAll();
 		this.eventDao.deleteAll();
@@ -79,13 +80,11 @@ public class DaoJUnitTest {
 			events[i].setId(eventDao.createEvent(events[i]));
 		}
 		
-		for (int i = 0; i < numInitialNumEvents; i++) {
-			eventAttentees[i] = new EventAttendee();
-			eventAttentees[i].setEvent(events[i]);
-			eventAttentees[i].setAttendee(calendarUsers[3 * i ]);
-			eventAttentees[i].setAttendee(calendarUsers[3 * i + 1]);
-			eventAttentees[i].setAttendee(calendarUsers[3 * i + 2]);
-			eventAttentees[i].setId(eventAttendeeDao.createEventAttendee(eventAttentees[i]));
+		for (int i = 0; i < numInitialNumEventAttendees; i++) {
+			eventAttendees[i] = new EventAttendee();
+			eventAttendees[i].setEvent(events[i % numInitialNumEvents]);
+			eventAttendees[i].setAttendee(calendarUsers[i]);
+			eventAttendees[i].setId(eventAttendeeDao.createEventAttendee(eventAttendees[i]));
 		}
 	}
 	
