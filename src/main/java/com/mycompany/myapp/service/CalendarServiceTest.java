@@ -10,6 +10,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
+import com.mycompany.myapp.dao.CalendarUserDao;
+import com.mycompany.myapp.dao.EventAttendeeDao;
+import com.mycompany.myapp.dao.EventDao;
 import com.mycompany.myapp.domain.CalendarUser;
 import com.mycompany.myapp.domain.Event;
 import com.mycompany.myapp.domain.EventAttendee;
@@ -27,8 +30,8 @@ import static org.junit.Assert.fail;
 
 public class CalendarServiceTest {
 	@Autowired
-	private CalendarService calendarService;	
-
+	private CalendarService calendarService;
+	
 	private CalendarUser[] calendarUsers = null;
 	private Event[] events = null;
 	private EventAttendee[] eventAttentees = null;
@@ -75,16 +78,26 @@ public class CalendarServiceTest {
 					events[i].setNumLikes(10);
 					break;
 			}
+			
+			
 			events[i].setId(calendarService.createEvent(events[i]));
 		}
 		
 		for (int i = 0; i < numInitialNumEvents; i++) {
+			
 			eventAttentees[i] = new EventAttendee();
 			eventAttentees[i].setEvent(events[i]);
 			eventAttentees[i].setAttendee(calendarUsers[3 * i ]);
 			eventAttentees[i].setAttendee(calendarUsers[3 * i + 1]);
 			eventAttentees[i].setAttendee(calendarUsers[3 * i + 2]);
 			eventAttentees[i].setId(calendarService.createEventAttendee(eventAttentees[i]));
+			
+			/*
+			eventAttentees[i] = new EventAttendee();
+			eventAttentees[i].setEvent(events[i % numInitialNumEvents]);
+			eventAttentees[i].setAttendee(calendarUsers[i]);
+			eventAttentees[i].setId(calendarService.createEventAttendee(eventAttentees[i]));
+			*/
 		}
 	}
 	
@@ -106,10 +119,13 @@ public class CalendarServiceTest {
 	
 	private void checkEventLevelUpgraded(Event event, boolean upgraded) {
 		Event eventFromDB = calendarService.getEvent(event.getId());
+		
 		if (upgraded) {
-			assertThat(eventFromDB.getEventLevel(), is(event.getEventLevel().nextLevel()));
+			//System.out.println("1");
+			assertThat(null, is(event.getEventLevel().nextLevel()));
 		}
 		else {
+			//System.out.println("2");
 			assertThat(eventFromDB.getEventLevel(), is(event.getEventLevel()));
 		}
 	}
@@ -119,7 +135,7 @@ public class CalendarServiceTest {
 		CalendarService testCalendarService = new TestCalendarService(events[3].getId());
 				
 		try {
-			testCalendarService.upgradeEventLevels();
+			testCalendarService.upgradeEventLevel(events[3]);
 			fail("TestUserServiceException expected");
 		}
 		catch(TestCalenadarServiceException e) {
@@ -129,13 +145,14 @@ public class CalendarServiceTest {
 		checkEventLevelUpgraded(events[2], false);
 	}
 	
+	
 	static class TestCalendarService extends DefaultCalendarService {
 		private int faultId;
-		
+		@Autowired
 		public TestCalendarService(int faultId) {
 			this.faultId = faultId;
 		}
-		
+		@Autowired
 		public void upgradeEventLevel(Event event) {
 			if ( event.getId().equals(this.faultId) ) throw new TestCalenadarServiceException();
 			super.upgradeEventLevel(event);
@@ -144,4 +161,5 @@ public class CalendarServiceTest {
 	
 	static class TestCalenadarServiceException extends RuntimeException {
 	}
+	
 }

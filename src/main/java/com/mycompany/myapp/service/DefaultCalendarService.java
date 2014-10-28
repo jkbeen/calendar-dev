@@ -2,9 +2,14 @@ package com.mycompany.myapp.service;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.Calendar;
 import java.util.List;
+
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.stereotype.Repository;
+
+
 
 import com.mycompany.myapp.dao.CalendarUserDao;
 import com.mycompany.myapp.dao.EventDao;
@@ -24,7 +32,8 @@ import com.mycompany.myapp.domain.Event;
 import com.mycompany.myapp.domain.EventAttendee;
 import com.mycompany.myapp.domain.EventLevel;
 
-@Service
+//@Service
+@Repository
 public class DefaultCalendarService implements CalendarService {
 	@Autowired
     private EventDao eventDao;
@@ -40,6 +49,59 @@ public class DefaultCalendarService implements CalendarService {
 	private RowMapper<CalendarUser> calendarRowMapper;
 	private RowMapper<Event> eventRowMapper;
 	private RowMapper<EventAttendee> eventAttendeeRowMapper;
+	
+	public DefaultCalendarService() {
+		calendarRowMapper = new RowMapper<CalendarUser>() {
+			public CalendarUser mapRow(ResultSet rs, int rowNum) throws SQLException {
+				CalendarUser calendarUser = new CalendarUser();
+				calendarUser.setId(rs.getInt("id"));
+				calendarUser.setEmail(rs.getString("email"));
+				calendarUser.setPassword(rs.getString("password"));
+				calendarUser.setName(rs.getString("name"));
+
+				return calendarUser;
+			}
+		};
+		eventRowMapper = new RowMapper<Event>() {
+			public Event mapRow(ResultSet rs, int rowNum) throws SQLException {
+				Event event = new Event();
+				event.setId(rs.getInt("id"));
+				Calendar when = Calendar.getInstance();
+				when.setTimeInMillis(rs.getTimestamp("when").getTime());
+				event.setWhen(when);
+				event.setSummary(rs.getString("summary"));
+				event.setDescription(rs.getString("description"));
+				event.setOwner(userDao.findUser(rs.getInt("owner")));
+				event.setNumLikes(rs.getInt("num_likes"));  						// Updated by Assignment 3
+				event.setEventLevel(EventLevel.valueOf(rs.getInt("event_level")));	// Updated by Assignment 3
+				return event;
+			}
+		};
+		eventAttendeeRowMapper = new RowMapper<EventAttendee>() {
+			public EventAttendee mapRow(ResultSet rs, int rowNum) throws SQLException {
+				EventAttendee eventAttendeeList = new EventAttendee();
+				// TODO Assignment 3
+				eventAttendeeList.setId(rs.getInt("id"));
+				eventAttendeeList.setEvent(eventDao.findEvent(rs.getInt("event_id")));
+				eventAttendeeList.setAttendee(userDao.findUser(rs.getInt("attendee")));
+				return eventAttendeeList;
+			}
+		};
+	}
+	
+	
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+	
+	@Autowired
+	public void setTransactionManager(PlatformTransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
+	}
+	
+	
+	
 	
 	/* CalendarUser */
 	@Override
@@ -89,11 +151,11 @@ public class DefaultCalendarService implements CalendarService {
     
 	@Override
     public void deleteAllUsers() {
-		// TODO Assignment 3
-		String sql = "delete from calendar_users";
-		this.jdbcTemplate.update(sql);
-	}
-	
+			// TODO Assignment 3
+			String sql = "delete from calendar_users";
+			this.jdbcTemplate.update(sql);
+		}
+		
     
 	
     /* Event */
@@ -119,14 +181,33 @@ public class DefaultCalendarService implements CalendarService {
 	}
 
 	@Override
-    public int createEvent(Event event) {
+    public int createEvent(final Event event) {
 		// TODO Assignment 3
-		
+		KeyHolder keyHolder = new GeneratedKeyHolder();
+
+		jdbcTemplate.update(new PreparedStatementCreator() {
+			@Override
+			public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+				PreparedStatement ps = connection.prepareStatement("insert into events(`when`, summary, description, owner, num_likes, event_level) values(?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+				
+				Timestamp timestamp = new Timestamp(Calendar.getInstance().getTimeInMillis()); /* Updated by Assignment 3 */ 
+				ps.setTimestamp(1, timestamp);
+				ps.setString(2, event.getSummary());
+				ps.setString(3, event.getDescription());
+				ps.setInt(4, event.getOwner().getId());
+				ps.setInt(5, event.getNumLikes());      		/* Updated by Assignment 3 */
+				ps.setInt(6, event.getEventLevel().intValue());	/* Updated by Assignment 3 */
+				return ps;
+			}
+		}, keyHolder);
+		return keyHolder.getKey().intValue();
+		/*
 		if (event.getEventLevel() == null) {
 			event.setEventLevel(EventLevel.NORMAL);
 		}
 		
 		return -1;
+		*/
 	}
     
 	@Override
@@ -190,12 +271,31 @@ public class DefaultCalendarService implements CalendarService {
 	public void upgradeEventLevels() throws Exception{
 		// TODO Assignment 3
 		// 트랜잭션 관련 코딩 필요함
+		TransactionStatus status = 
+				this.transactionManager.getTransaction(new DefaultTransactionDefinition());
+			try {
+				List<Event> events = eventDao.findAllEvents();
+				for (Event event : events) {
+					if (canUpgradeEventLevel(event)) {
+						upgradeEventLevel(event);
+					}
+				}
+				this.transactionManager.commit(status);
+			} catch (RuntimeException e) {
+				this.transactionManager.rollback(status);
+				throw e;
+			}
 	}
 
 	@Override
 	public boolean canUpgradeEventLevel(Event event) {
 		// TODO Assignment 3
-		return false;
+		EventLevel currentLevel = event.getEventLevel();
+		switch(currentLevel) {                                   
+			case NORMAL: return (event.getNumLikes() >= 10); 
+			case HOT: return false;
+			default: throw new IllegalArgumentException("Unknown Level: " + currentLevel); 
+		}
 	}
 	
 	@Override
